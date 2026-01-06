@@ -50,12 +50,17 @@ This repository contains a **production-ready distributed training benchmark fra
 
 ### Key Features
 
-✅ **100% Offline** - No runtime downloads, all dependencies pre-packaged
-✅ **Kubernetes-Native** - Fully containerized with K8s job orchestration
-✅ **Automated** - Single command runs all benchmarks and generates reports
-✅ **Reproducible** - Deterministic results with seed control
-✅ **Extensible** - Easy to add new strategies, models, or GPU types
-✅ **Production-Ready** - Battle-tested on OCI with real workloads
+**100% Offline** - No runtime downloads, all dependencies pre-packaged
+
+**Kubernetes-Native** - Fully containerized with K8s job orchestration
+
+**Automated** - Single command runs all benchmarks and generates reports
+
+**Reproducible** - Deterministic results with seed control
+
+**Extensible** - Easy to add new strategies, models, or GPU types
+
+**Production-Ready** - Battle-tested on OCI with real workloads
 
 ---
 
