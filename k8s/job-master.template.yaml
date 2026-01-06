@@ -1,0 +1,89 @@
+# Multi-node distributed training: Master (rank 0)
+# TEMPLATE: Replace {{STRATEGY}}, {{SEQ_LEN}}, {{TIER}}, {{WORLD_SIZE}}, {{IMAGE}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bench-master-{{STRATEGY}}-ws{{WORLD_SIZE}}-seq{{SEQ_LEN}}
+  namespace: bench
+  labels:
+    app: distributed-training-bench
+    role: master
+    strategy: {{STRATEGY}}
+spec:
+  backoffLimit: 1
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: distributed-training-bench
+        role: master
+        strategy: {{STRATEGY}}
+    spec:
+      serviceAccountName: bench-sa
+      restartPolicy: Never
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: trainer
+        image: {{IMAGE}}
+        imagePullPolicy: Always
+        env:
+        - name: STRATEGY
+          value: "{{STRATEGY}}"
+        - name: WORLD_SIZE
+          value: "{{WORLD_SIZE}}"
+        - name: RANK
+          value: "0"
+        - name: LOCAL_RANK
+          value: "0"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        # MASTER_ADDR is set by entrypoint.sh from POD_IP
+        - name: MASTER_PORT
+          value: "29500"
+        - name: NCCL_SOCKET_IFNAME
+          value: "eth0"
+        - name: NCCL_DEBUG
+          value: "INFO"
+        - name: SEQ_LEN
+          value: "{{SEQ_LEN}}"
+        - name: TIER
+          value: "{{TIER}}"
+        - name: STEPS
+          value: "{{STEPS}}"
+        - name: WARMUP_STEPS
+          value: "5"
+        - name: PER_DEVICE_BATCH
+          value: "{{PER_DEVICE_BATCH}}"
+        - name: GRAD_ACCUM
+          value: "{{GRAD_ACCUM}}"
+        - name: SYNTHETIC
+          value: "true"
+        ports:
+        - containerPort: 29500
+          name: dist
+          protocol: TCP
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+            memory: "16Gi"
+            cpu: "4"
+          limits:
+            nvidia.com/gpu: 1
+            memory: "48Gi"
+            cpu: "8"
+        volumeMounts:
+        - name: results
+          mountPath: /results
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: results
+        emptyDir: {}
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: "8Gi"

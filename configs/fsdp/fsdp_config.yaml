@@ -1,0 +1,11 @@
+# FSDP Configuration (reference only - mostly configured in code)
+# This file is for documentation and future extension
+
+fsdp_config:
+  mixed_precision: false  # Handled by torch.cuda.amp.autocast()
+  auto_wrap_policy: size_based  # Wraps modules > 100M params
+  cpu_offload: false
+  backward_prefetch: backward_pre  # Prefetch before backward pass
+  sharding_strategy: full_shard  # Equivalent to ZeRO-3
+  forward_prefetch: true
+  sync_module_states: true

@@ -1,0 +1,83 @@
+# Multi-node distributed training: Workers (ranks 1..N-1)
+# TEMPLATE: Replace {{STRATEGY}}, {{SEQ_LEN}}, {{TIER}}, {{WORLD_SIZE}}, {{IMAGE}}
+# Uses Indexed Job: each pod gets JOB_COMPLETION_INDEX = 0..(N-2), mapped to rank = index+1
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bench-workers-{{STRATEGY}}-ws{{WORLD_SIZE}}-seq{{SEQ_LEN}}
+  namespace: bench
+  labels:
+    app: distributed-training-bench
+    role: worker
+    strategy: {{STRATEGY}}
+spec:
+  backoffLimit: 1
+  completions: {{WORKER_COUNT}}  # WORLD_SIZE - 1
+  parallelism: {{WORKER_COUNT}}
+  completionMode: Indexed
+  template:
+    metadata:
+      labels:
+        app: distributed-training-bench
+        role: worker
+        strategy: {{STRATEGY}}
+    spec:
+      serviceAccountName: bench-sa
+      restartPolicy: Never
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: trainer
+        image: {{IMAGE}}
+        imagePullPolicy: Always
+        env:
+        - name: STRATEGY
+          value: "{{STRATEGY}}"
+        - name: WORLD_SIZE
+          value: "{{WORLD_SIZE}}"
+        # RANK is computed by entrypoint.sh from JOB_COMPLETION_INDEX
+        - name: LOCAL_RANK
+          value: "0"
+        - name: MASTER_ADDR
+          value: "bench-master.bench.svc.cluster.local"
+        - name: MASTER_PORT
+          value: "29500"
+        - name: NCCL_SOCKET_IFNAME
+          value: "eth0"
+        - name: NCCL_DEBUG
+          value: "INFO"
+        - name: SEQ_LEN
+          value: "{{SEQ_LEN}}"
+        - name: TIER
+          value: "{{TIER}}"
+        - name: STEPS
+          value: "{{STEPS}}"
+        - name: WARMUP_STEPS
+          value: "5"
+        - name: PER_DEVICE_BATCH
+          value: "{{PER_DEVICE_BATCH}}"
+        - name: GRAD_ACCUM
+          value: "{{GRAD_ACCUM}}"
+        - name: SYNTHETIC
+          value: "true"
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+            memory: "16Gi"
+            cpu: "4"
+          limits:
+            nvidia.com/gpu: 1
+            memory: "48Gi"
+            cpu: "8"
+        volumeMounts:
+        - name: results
+          mountPath: /results
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: results
+        emptyDir: {}
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: "8Gi"

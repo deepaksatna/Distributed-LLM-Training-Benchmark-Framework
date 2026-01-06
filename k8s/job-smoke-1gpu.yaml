@@ -1,0 +1,77 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke-1gpu
+  namespace: bench
+  labels:
+    app: distributed-training-bench
+    test: smoke
+spec:
+  backoffLimit: 2
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: distributed-training-bench
+        test: smoke
+    spec:
+      serviceAccountName: bench-sa
+      restartPolicy: Never
+      containers:
+      - name: trainer
+        image: fra.ocir.io/frntrd2vyxvi/models:mistraltraining-fsdp-zero-v1
+        imagePullPolicy: Always
+        env:
+        - name: STRATEGY
+          value: "ddp"
+        - name: WORLD_SIZE
+          value: "1"
+        - name: RANK
+          value: "0"
+        - name: LOCAL_RANK
+          value: "0"
+        - name: MASTER_ADDR
+          value: "localhost"
+        - name: MASTER_PORT
+          value: "29500"
+        - name: SEQ_LEN
+          value: "2048"
+        - name: TIER
+          value: "A"
+        - name: STEPS
+          value: "50"
+        - name: WARMUP_STEPS
+          value: "5"
+        - name: PER_DEVICE_BATCH
+          value: "1"
+        - name: GRAD_ACCUM
+          value: "4"
+        - name: SYNTHETIC
+          value: "true"
+        resources:
+          requests:
+            nvidia.com/gpu: 1
+            memory: "16Gi"
+            cpu: "4"
+          limits:
+            nvidia.com/gpu: 1
+            memory: "32Gi"
+            cpu: "8"
+        volumeMounts:
+        - name: results
+          mountPath: /results
+      volumes:
+      - name: results
+        emptyDir: {}
+      # Prefer A10 nodes if labeled
+      # affinity:
+      #   nodeAffinity:
+      #     preferredDuringSchedulingIgnoredDuringExecution:
+      #     - weight: 100
+      #       preference:
+      #         matchExpressions:
+      #         - key: node.kubernetes.io/instance-type
+      #           operator: In
+      #           values:
+      #           - VM.GPU.A10.1

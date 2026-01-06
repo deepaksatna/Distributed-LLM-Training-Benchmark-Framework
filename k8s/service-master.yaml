@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bench-master
+  namespace: bench
+  labels:
+    app: distributed-training-bench
+    role: master
+spec:
+  # Regular ClusterIP service (not headless) for Jobs
+  type: ClusterIP
+  selector:
+    app: distributed-training-bench
+    role: master
+  ports:
+  - name: dist
+    port: 29500
+    targetPort: 29500
+    protocol: TCP

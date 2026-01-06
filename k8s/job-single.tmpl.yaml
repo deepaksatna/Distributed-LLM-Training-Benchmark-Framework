@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: smoke-1gpu
+  namespace: bench
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: bench-sa
+      automountServiceAccountToken: false
+      restartPolicy: Never
+      containers:
+      - name: bench
+        image: __IMAGE__
+        env:
+        - name: STRATEGY
+          value: "ddp"
+        - name: WORLD_SIZE
+          value: "1"
+        - name: RANK
+          value: "0"
+        - name: MASTER_ADDR
+          value: "127.0.0.1"
+        - name: MASTER_PORT
+          value: "29500"
+        - name: SEQ_LEN
+          value: "2048"
+        - name: TIER
+          value: "A"
+        - name: STEPS
+          value: "10"
+        - name: WARMUP_STEPS
+          value: "2"
+        - name: PER_DEVICE_BATCH
+          value: "1"
+        - name: GRAD_ACCUM
+          value: "1"
+        - name: SYNTHETIC
+          value: "true"
+        - name: RESULTS_DIR
+          value: "/results"
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+          requests:
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: results
+          mountPath: /results
+      volumes:
+      - name: results
+        emptyDir: {}
+      nodeSelector:
+        accelerator: nvidia-tesla-a10
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
