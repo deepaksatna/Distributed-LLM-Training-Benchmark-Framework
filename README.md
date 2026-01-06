@@ -74,7 +74,7 @@ When training large language models, choosing the right distributed training str
 - **Scalability** - Need to understand how strategies scale from 2→4→8+ GPUs
 - **Memory constraints** - Larger models require memory-efficient sharding
 
-However, there's **no standardized benchmark** for comparing these strategies on real cloud infrastructure, especially on Oracle Cloud Infrastructure (OCI).
+However, there's **no standardized benchmark** for comparing these strategies on real cloud infrastructure.
 
 ### Our Solution
 
@@ -1134,10 +1134,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📧 Contact
 
 **Oracle AI CoE**
-- **Email:** deep.soni@oracle.com
-- **Project:** Oracle Cloud LLM Training Optimization
-- **Platform:** Oracle Kubernetes Engine (OKE)
-
 ---
 
 ## 🙏 Acknowledgments
